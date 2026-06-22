@@ -212,18 +212,21 @@ async function sbGet(profile, path) {
   return r.json();
 }
 
-/* Returns 'valid' | 'invalid' | 'incomplete'.
-   APA Masters rule: any 3-player lineup must sum to <= 15. A team
-   passes if AT LEAST ONE 3-player subset hits that cap. Teams with
-   fewer than 3 SL-known players are 'incomplete' (can't be judged). */
+/* APA Masters rule: any 3-player lineup must sum to <= 15. Returns
+   { state: 'valid' | 'invalid' | 'incomplete', minSum: number|null }
+   where minSum is the smallest sum-of-3 achievable from the roster
+   (used to tell over-cap teams by how much they're over). */
 function lineupCheck(players) {
   const sls = players.map(p => p.skill_level).filter(v => v != null);
-  if (sls.length < 3) return 'incomplete';
+  if (sls.length < 3) return { state: 'incomplete', minSum: null };
+  let minSum = Infinity;
   for (let i = 0; i < sls.length; i++)
     for (let j = i + 1; j < sls.length; j++)
-      for (let k = j + 1; k < sls.length; k++)
-        if (sls[i] + sls[j] + sls[k] <= 15) return 'valid';
-  return 'invalid';
+      for (let k = j + 1; k < sls.length; k++) {
+        const s = sls[i] + sls[j] + sls[k];
+        if (s < minSum) minSum = s;
+      }
+  return { state: minSum <= 15 ? 'valid' : 'invalid', minSum };
 }
 
 function renderTeam(team, players, idx) {
@@ -236,10 +239,10 @@ function renderTeam(team, players, idx) {
       (p.member_number ? '<div class="pnum">#' + esc(p.member_number) + '</div>' : '') +
       (p.skill_level   ? '<div class="psl">SL' + esc(p.skill_level) + '</div>' : '') +
     '</li>';
-  const lineupChip = lineup === 'invalid'
-    ? '<div class="team-meta"><div class="team-bad" title="No 3-player combination on this roster sums to 15 or less.">&#9888; Over cap</div></div>'
+  const lineupChip = lineup.state === 'invalid'
+    ? '<div class="team-meta"><div class="team-bad" title="Lowest possible 3-player lineup totals SL'+lineup.minSum+'. Cap is 15.">&#9888; Over cap &middot; min SL ' + lineup.minSum + '</div></div>'
     : '';
-  return '<div class="team' + (lineup === 'invalid' ? ' team-over' : '') + '">'
+  return '<div class="team' + (lineup.state === 'invalid' ? ' team-over' : '') + '">'
     + '<div class="team-head">'
     +   '<div class="team-no">' + idx + '</div>'
     +   '<div>'
