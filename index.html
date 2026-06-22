@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Team Captain's Qualifier — South Portland Metro APA</title>
+<meta name="description" content="Team rosters for the South Portland Metro APA Team Captain's Qualifier">
+<style>
+  :root {
+    --spm-red:   #ea002a;
+    --spm-blue:  #0031a8;
+    --spm-gold:  #c9a64a;
+    --ink:       #111418;
+    --ink-2:     #4a5159;
+    --muted:     #7a8088;
+    --line:      #d8dde2;
+    --bg:        #f6f7f9;
+    --card:      #ffffff;
+    --pill-bg:   #eef2f6;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  body { padding-bottom: env(safe-area-inset-bottom, 0); }
+
+  header.banner {
+    background: linear-gradient(90deg, var(--spm-red) 0%, var(--spm-blue) 100%);
+    color: #fff;
+    padding: 18px 16px;
+    text-align: center;
+  }
+  header.banner h1 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+  header.banner .sub {
+    margin-top: 4px;
+    font-size: 0.85rem;
+    opacity: 0.92;
+  }
+
+  main { padding: 14px 14px 32px; max-width: 760px; margin: 0 auto; }
+
+  .summary {
+    display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap;
+    margin: 6px 4px 14px;
+    color: var(--ink-2);
+    font-size: 0.92rem;
+  }
+  .summary strong { color: var(--ink); }
+
+  .team {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    padding: 14px 14px 10px;
+    box-shadow: 0 1px 2px rgba(20,30,50,0.04);
+  }
+  .team-head {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 8px;
+  }
+  .team-no {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 999px;
+    background: var(--spm-blue);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .team-name {
+    font-weight: 700;
+    color: var(--ink);
+    font-size: 1.05rem;
+    line-height: 1.2;
+  }
+  .team-captain-tag {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--spm-gold);
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .team-meta {
+    margin-left: auto;
+    display: flex; gap: 6px;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .team-tot {
+    background: var(--pill-bg);
+    color: var(--ink);
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .players {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px dashed var(--line);
+  }
+  .player {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .player:last-child { border-bottom: 0; }
+  .player .pname {
+    flex: 1 1 auto;
+    font-size: 0.95rem;
+    color: var(--ink);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .player.captain .pname {
+    font-weight: 700;
+  }
+  .player .pnum {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.82rem;
+    flex-shrink: 0;
+  }
+  .player .psl {
+    flex-shrink: 0;
+    min-width: 32px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--pill-bg);
+    color: var(--ink);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .player.captain .psl {
+    background: var(--spm-gold);
+    color: #fff;
+  }
+
+  .status {
+    text-align: center;
+    padding: 24px 12px;
+    color: var(--muted);
+  }
+  .status.err { color: var(--spm-red); }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.78rem;
+    padding: 18px 12px 24px;
+  }
+</style>
+</head>
+<body>
+
+<header class="banner">
+  <h1>Team Captain's Qualifier</h1>
+  <div class="sub" id="eventSub">South Portland Metro APA</div>
+</header>
+
+<main>
+  <div class="summary" id="summary"></div>
+  <div id="teams">
+    <div class="status">Loading rosters…</div>
+  </div>
+</main>
+
+<footer id="footer"></footer>
+
+<script>
+const SB_URL  = 'https://dqzbekoaysgaiqljueac.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRxemJla29heXNnYWlxbGp1ZWFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNzA5NzgsImV4cCI6MjA5MDc0Njk3OH0.cCdGxZ4zEFzU_r6lWSDeoNWG67Q4MSYCAtpds035dfU';
+
+const APP_VERSION = '1.0';
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+async function sbGet(profile, path) {
+  const r = await fetch(SB_URL + '/rest/v1/' + path, {
+    headers: { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON, 'Accept-Profile': profile }
+  });
+  if (!r.ok) throw new Error('Supabase ' + r.status + ': ' + (await r.text()).slice(0,160));
+  return r.json();
+}
+
+function renderTeam(team, players, idx) {
+  const captain = players.find(p => p.is_captain) || players[0];
+  const rest = players.filter(p => !p.is_captain).sort((a,b) => a.position - b.position);
+  const total = players.reduce((s, p) => s + (p.skill_level || 0), 0);
+  const pRow = (p, isCap) =>
+    '<li class="player' + (isCap ? ' captain' : '') + '">' +
+      '<div class="pname">' + esc(p.name) + '</div>' +
+      (p.member_number ? '<div class="pnum">#' + esc(p.member_number) + '</div>' : '') +
+      (p.skill_level   ? '<div class="psl">SL' + esc(p.skill_level) + '</div>' : '') +
+    '</li>';
+  return '<div class="team">'
+    + '<div class="team-head">'
+    +   '<div class="team-no">' + idx + '</div>'
+    +   '<div>'
+    +     '<div class="team-name">' + esc(captain ? captain.name + "'s Team" : 'Team ' + idx) + '</div>'
+    +     (captain ? '<div class="team-captain-tag">Captain</div>' : '')
+    +   '</div>'
+    +   '<div class="team-meta"><div class="team-tot">Total SL ' + total + '</div></div>'
+    + '</div>'
+    + '<ul class="players">'
+    +   (captain ? pRow(captain, true) : '')
+    +   rest.map(p => pRow(p, false)).join('')
+    + '</ul>'
+    + '</div>';
+}
+
+async function load() {
+  const teamsEl = document.getElementById('teams');
+  const sumEl = document.getElementById('summary');
+  const subEl = document.getElementById('eventSub');
+  try {
+    const events = await sbGet('tcq', 'events?is_current=eq.true&select=*');
+    if (!events.length) {
+      teamsEl.innerHTML = '<div class="status err">No current Captain\'s Qualifier event.</div>';
+      return;
+    }
+    const ev = events[0];
+    subEl.textContent = ev.name;
+
+    const teams = await sbGet('tcq', 'teams?event_id=eq.' + ev.id + '&select=*&order=team_index.asc');
+    if (!teams.length) {
+      teamsEl.innerHTML = '<div class="status">No teams yet.</div>';
+      sumEl.innerHTML = '';
+      return;
+    }
+    const tids = teams.map(t => t.id).join(',');
+    const players = await sbGet('tcq', 'players_public?team_id=in.(' + tids + ')&select=*&order=team_id.asc,position.asc');
+    const byTeam = new Map();
+    for (const p of players) {
+      if (!byTeam.has(p.team_id)) byTeam.set(p.team_id, []);
+      byTeam.get(p.team_id).push(p);
+    }
+    const totalPlayers = players.length;
+    sumEl.innerHTML = '<strong>' + teams.length + '</strong> teams &middot; <strong>' + totalPlayers + '</strong> players';
+    teamsEl.innerHTML = teams.map((t, i) => renderTeam(t, byTeam.get(t.id) || [], i + 1)).join('');
+  } catch (e) {
+    teamsEl.innerHTML = '<div class="status err">Couldn\'t load: ' + esc(e.message) + '</div>';
+  }
+}
+
+document.getElementById('footer').textContent = "Team Captain's Qualifier · v" + APP_VERSION;
+load();
+</script>
+
+</body>
+</html>
