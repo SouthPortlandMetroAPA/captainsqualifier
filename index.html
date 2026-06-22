@@ -160,6 +160,17 @@
     background: var(--spm-gold);
     color: #fff;
   }
+  .player.ineligible {
+    background: rgba(234, 0, 42, 0.06);
+  }
+  .player.ineligible .pname { color: var(--spm-red); }
+  .player .pelig {
+    flex-basis: 100%;
+    font-size: 0.78rem;
+    color: var(--spm-red);
+    padding: 2px 0 0 38px;
+    font-weight: 600;
+  }
 
   .status {
     text-align: center;
@@ -196,7 +207,7 @@
 const SB_URL  = 'https://dqzbekoaysgaiqljueac.supabase.co';
 const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRxemJla29heXNnYWlxbGp1ZWFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNzA5NzgsImV4cCI6MjA5MDc0Njk3OH0.cCdGxZ4zEFzU_r6lWSDeoNWG67Q4MSYCAtpds035dfU';
 
-const APP_VERSION = '1.0';
+const APP_VERSION = '1.1';
 
 function esc(s) {
   return String(s == null ? '' : s)
@@ -233,16 +244,27 @@ function renderTeam(team, players, idx) {
   const captain = players.find(p => p.is_captain) || players[0];
   const rest = players.filter(p => !p.is_captain).sort((a,b) => a.position - b.position);
   const lineup = lineupCheck(players);
-  const pRow = (p, isCap) =>
-    '<li class="player' + (isCap ? ' captain' : '') + '">' +
+  const pRow = (p, isCap) => {
+    const reasons = Array.isArray(p.ineligibility_reasons) ? p.ineligibility_reasons : [];
+    const ineligible = reasons.length > 0;
+    return '<li class="player' + (isCap ? ' captain' : '') + (ineligible ? ' ineligible' : '') + '">' +
       '<div class="pname">' + esc(p.name) + '</div>' +
       (p.member_number ? '<div class="pnum">#' + esc(p.member_number) + '</div>' : '') +
       (p.skill_level   ? '<div class="psl">SL' + esc(p.skill_level) + '</div>' : '') +
+      (ineligible ? '<div class="pelig">&#9888; ' + esc(reasons.join('; ')) + '</div>' : '') +
     '</li>';
-  const lineupChip = lineup.state === 'invalid'
-    ? '<div class="team-meta"><div class="team-bad" title="Lowest possible 3-player lineup totals SL'+lineup.minSum+'. Cap is 15.">&#9888; Over cap &middot; min SL ' + lineup.minSum + '</div></div>'
-    : '';
-  return '<div class="team' + (lineup.state === 'invalid' ? ' team-over' : '') + '">'
+  };
+  const ineligibleCount = players.filter(p => Array.isArray(p.ineligibility_reasons) && p.ineligibility_reasons.length).length;
+  const teamHasIssue = lineup.state === 'invalid' || ineligibleCount > 0;
+  const chips = [];
+  if (lineup.state === 'invalid') {
+    chips.push('<div class="team-bad" title="Lowest possible 3-player lineup totals SL'+lineup.minSum+'. Cap is 15.">&#9888; Over cap &middot; min SL ' + lineup.minSum + '</div>');
+  }
+  if (ineligibleCount > 0) {
+    chips.push('<div class="team-bad" title="Players flagged below do not currently meet the Captains Tournament rules.">&#9888; ' + ineligibleCount + ' ineligible</div>');
+  }
+  const lineupChip = chips.length ? '<div class="team-meta">' + chips.join('') + '</div>' : '';
+  return '<div class="team' + (teamHasIssue ? ' team-over' : '') + '">'
     + '<div class="team-head">'
     +   '<div class="team-no">' + idx + '</div>'
     +   '<div>'
