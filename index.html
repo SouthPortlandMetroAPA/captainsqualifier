@@ -202,7 +202,6 @@ async function sbGet(profile, path) {
 function renderTeam(team, players, idx) {
   const captain = players.find(p => p.is_captain) || players[0];
   const rest = players.filter(p => !p.is_captain).sort((a,b) => a.position - b.position);
-  const total = players.reduce((s, p) => s + (p.skill_level || 0), 0);
   const pRow = (p, isCap) =>
     '<li class="player' + (isCap ? ' captain' : '') + '">' +
       '<div class="pname">' + esc(p.name) + '</div>' +
@@ -216,7 +215,6 @@ function renderTeam(team, players, idx) {
     +     '<div class="team-name">' + esc(captain ? captain.name + "'s Team" : 'Team ' + idx) + '</div>'
     +     (captain ? '<div class="team-captain-tag">Captain</div>' : '')
     +   '</div>'
-    +   '<div class="team-meta"><div class="team-tot">Total SL ' + total + '</div></div>'
     + '</div>'
     + '<ul class="players">'
     +   (captain ? pRow(captain, true) : '')
