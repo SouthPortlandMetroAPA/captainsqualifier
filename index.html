@@ -207,7 +207,7 @@
 const SB_URL  = 'https://dqzbekoaysgaiqljueac.supabase.co';
 const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRxemJla29heXNnYWlxbGp1ZWFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNzA5NzgsImV4cCI6MjA5MDc0Njk3OH0.cCdGxZ4zEFzU_r6lWSDeoNWG67Q4MSYCAtpds035dfU';
 
-const APP_VERSION = '1.1';
+const APP_VERSION = '1.2';
 
 function esc(s) {
   return String(s == null ? '' : s)
@@ -228,7 +228,11 @@ async function sbGet(profile, path) {
    where minSum is the smallest sum-of-3 achievable from the roster
    (used to tell over-cap teams by how much they're over). */
 function lineupCheck(players) {
-  const sls = players.map(p => p.skill_level).filter(v => v != null);
+  /* Only eligible players (empty ineligibility_reasons) count toward
+     the lineup math. An ineligible player can't legally play, so
+     including their SL would let teams "qualify" with phantom rosters. */
+  const eligible = players.filter(p => !Array.isArray(p.ineligibility_reasons) || p.ineligibility_reasons.length === 0);
+  const sls = eligible.map(p => p.skill_level).filter(v => v != null);
   if (sls.length < 3) return { state: 'incomplete', minSum: null };
   let minSum = Infinity;
   for (let i = 0; i < sls.length; i++)
