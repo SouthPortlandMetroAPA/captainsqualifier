@@ -88,7 +88,7 @@
   }
   .team-meta {
     margin-left: auto;
-    display: flex; gap: 6px;
+    display: flex; gap: 6px; flex-wrap: wrap; align-items: center; justify-content: flex-end;
     font-size: 0.78rem;
     color: var(--muted);
   }
@@ -113,6 +113,22 @@
     font-size: 0.82rem;
     letter-spacing: 0.02em;
   }
+  .team.team-unpaid {
+    border-color: var(--spm-red);
+    border-left-width: 6px;
+    background: #fdecee;
+  }
+  .pay-pill {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: #fff;
+    display: inline-block;
+  }
+  .pay-pill.paid   { background: #0a6b3a; }
+  .pay-pill.unpaid { background: var(--spm-red); }
 
   .players {
     list-style: none;
@@ -217,7 +233,7 @@
 const SB_URL  = 'https://dqzbekoaysgaiqljueac.supabase.co';
 const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRxemJla29heXNnYWlxbGp1ZWFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNzA5NzgsImV4cCI6MjA5MDc0Njk3OH0.cCdGxZ4zEFzU_r6lWSDeoNWG67Q4MSYCAtpds035dfU';
 
-const APP_VERSION = '1.4';
+const APP_VERSION = '1.5';
 
 function esc(s) {
   return String(s == null ? '' : s)
@@ -278,14 +294,19 @@ function renderTeam(team, players, idx) {
   const ineligibleCount = players.filter(p => Array.isArray(p.ineligibility_reasons) && p.ineligibility_reasons.length).length;
   const teamHasIssue = lineup.state === 'invalid' || ineligibleCount > 0;
   const chips = [];
+  const paidPill = team.paid
+    ? '<span class="pay-pill paid" title="Team fee received">&#10003; PAID</span>'
+    : '<span class="pay-pill unpaid" title="Team fee has not been received yet">&#10060; NOT PAID</span>';
+  chips.push(paidPill);
   if (lineup.state === 'invalid') {
     chips.push('<div class="team-bad" title="Lowest possible 3-player lineup totals SL'+lineup.minSum+'. Cap is 15.">&#9888; Over cap &middot; min SL ' + lineup.minSum + '</div>');
   }
   if (ineligibleCount > 0) {
     chips.push('<div class="team-bad" title="Players flagged below do not currently meet the Captains Tournament rules.">&#9888; ' + ineligibleCount + ' ineligible</div>');
   }
-  const lineupChip = chips.length ? '<div class="team-meta">' + chips.join('') + '</div>' : '';
-  return '<div class="team' + (teamHasIssue ? ' team-over' : '') + '">'
+  const lineupChip = '<div class="team-meta">' + chips.join('') + '</div>';
+  const cls = 'team' + (teamHasIssue ? ' team-over' : '') + (team.paid ? '' : ' team-unpaid');
+  return '<div class="' + cls + '">'
     + '<div class="team-head">'
     +   '<div class="team-no">' + idx + '</div>'
     +   '<div>'
